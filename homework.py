@@ -8,7 +8,7 @@ import requests
 from dotenv import load_dotenv
 from telegram import Bot
 
-from castom_errors import NotAvalibleError, SendMessageError
+from custom_errors import NotAvalibleError, SendMessageError
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
