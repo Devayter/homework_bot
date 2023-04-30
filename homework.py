@@ -155,12 +155,10 @@ def main():
                 current_report['message'] = parse_status(homeworks[0])
             else:
                 current_report['message'] = 'Нет новых статусов'
-            if (
-                previous_report != current_report
-                and (send_message(bot, current_report['message']) is True)
-            ):
-                previous_report = previous_report.copy()
-                timestamp = api_answer.get('current_date')
+            if previous_report != current_report:
+                if send_message(bot, current_report['message']) is True:
+                    previous_report = previous_report.copy()
+                    timestamp = api_answer.get('current_date')
             else:
                 logger.debug('Нет новых статусов')
         except EmptyResponseFromApiError as error:
