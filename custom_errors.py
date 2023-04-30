@@ -1,6 +1,6 @@
-class SendMessageError(Exception):
+class EmptyResponseFromApiError(Exception):
     pass
 
 
-class NotAvalibleError:
+class NotAvaliableError:
     pass
