@@ -77,7 +77,7 @@ def send_message(bot, message):
     except telegram.error.TelegramError(message) as error:
         logger.error(error, exc_info=True)
         return False
-    logger.debug(f'Eспешно отправлено сообщение "{message}"')
+    logger.debug(f'Успешно отправлено сообщение "{message}"')
     return True
 
 
