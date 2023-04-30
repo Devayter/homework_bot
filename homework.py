@@ -24,9 +24,9 @@ formatter = logging.Formatter(
 )
 handler.setFormatter(formatter)
 
-handler = StreamHandler()
-logger.addHandler(handler)
-handler.setFormatter(formatter)
+handler_stream = StreamHandler()
+logger.addHandler(handler_stream)
+handler_stream.setFormatter(formatter)
 
 load_dotenv()
 
@@ -50,11 +50,15 @@ def check_tokens():
     Если отсутствует хотя бы одна переменная окружения — продолжать работу
     бота нет смысла.
     """
-    tokens_tuple = (PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID,)
+    tokens_tuple = (
+        ('PRACTICUM_TOKEN', PRACTICUM_TOKEN),
+        ('TELEGRAM_TOKEN', TELEGRAM_TOKEN),
+        ('TELEGRAM_CHAT_ID', TELEGRAM_CHAT_ID),
+    )
     availability = True
-    for token in tokens_tuple:
-        if not token:
-            logger.critical(f'Отсутствует токен {token}')
+    for token_name, token_value in tokens_tuple:
+        if not token_value:
+            logger.critical(f'Отсутствует токен {token_name}')
             availability = False
     if availability is False:
         error_message = 'Отсутствует переменная окружения.'
@@ -108,10 +112,9 @@ def check_response(response):
     данных Python.
     """
     logger.debug('Проверка ответа API')
-    try:
-        isinstance(response, dict)
-    except TypeError('Ответ API не приведен к типу данных Python'):
-        return None
+    if not isinstance(response, dict):
+        raise TypeError('Ответ API не приведен к типу данных Python')
+    # если делать проверку ключа через if, то не проходит проверку pytest
     try:
         response['homeworks']
     except EmptyResponseFromApiError('Отсутствует "homeworks" в ответе API'):
@@ -133,9 +136,11 @@ def parse_status(homework):
         homework_name = homework['homework_name']
         homework_status = homework['status']
     except KeyError as error:
-        raise error('Отсутствует ожидаемый ключ в ответе Api')
+        raise (f'Ошибка {error}: Отсутствует ожидаемый ключ в ответе Api')
     if homework_status not in HOMEWORK_VERDICTS:
-        raise KeyError('Ключ отсутствует в словаре "HOMEWORK_VERDICTS"')
+        raise ValueError(
+            f'Неожиданное принятое значение статуса - {homework_status}'
+        )
     verdict = HOMEWORK_VERDICTS[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
@@ -156,9 +161,9 @@ def main():
             else:
                 current_report['message'] = 'Нет новых статусов'
             if previous_report != current_report:
-                if send_message(bot, current_report['message']) is True:
+                if send_message(bot, current_report['message']):
                     previous_report = current_report.copy()
-                    timestamp = api_answer.get('current_date')
+                    timestamp = api_answer.get('current_date', 0)
             else:
                 logger.debug('Нет новых статусов')
         except EmptyResponseFromApiError as error:
@@ -166,7 +171,7 @@ def main():
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             current_report['message'] = message
-            logger.error(f'Сбой в работе программы: {error}')
+            logger.error(message)
             if previous_report != current_report:
                 previous_report = current_report.copy()
                 send_message(bot, current_report['message'])
