@@ -157,7 +157,7 @@ def main():
                 current_report['message'] = 'Нет новых статусов'
             if previous_report != current_report:
                 if send_message(bot, current_report['message']) is True:
-                    previous_report = previous_report.copy()
+                    previous_report = current_report.copy()
                     timestamp = api_answer.get('current_date')
             else:
                 logger.debug('Нет новых статусов')
@@ -168,7 +168,7 @@ def main():
             current_report['message'] = message
             logger.error(f'Сбой в работе программы: {error}')
             if previous_report != current_report:
-                previous_report = previous_report.copy()
+                previous_report = current_report.copy()
                 send_message(bot, current_report['message'])
         finally:
             time.sleep(RETRY_PERIOD)
