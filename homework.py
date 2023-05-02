@@ -114,11 +114,8 @@ def check_response(response):
     logger.debug('Проверка ответа API')
     if not isinstance(response, dict):
         raise TypeError('Ответ API не приведен к типу данных Python')
-    # если делать проверку ключа через if, то не проходит проверку pytest
-    try:
-        response['homeworks']
-    except EmptyResponseFromApiError('Отсутствует "homeworks" в ответе API'):
-        return None
+    if 'homeworks' not in response:
+        raise EmptyResponseFromApiError('Отсутствует "homeworks" в ответе API')
     homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
         raise TypeError('Ответ API под ключом "homeworks" не в виде списка')
@@ -136,7 +133,9 @@ def parse_status(homework):
         homework_name = homework['homework_name']
         homework_status = homework['status']
     except KeyError as error:
-        raise (f'Ошибка {error}: Отсутствует ожидаемый ключ в ответе Api')
+        raise KeyError(
+            f'Ошибка {error}: Отсутствует ожидаемый ключ в ответе Api'
+        )
     if homework_status not in HOMEWORK_VERDICTS:
         raise ValueError(
             f'Неожиданное принятое значение статуса - {homework_status}'
@@ -163,7 +162,7 @@ def main():
             if previous_report != current_report:
                 if send_message(bot, current_report['message']):
                     previous_report = current_report.copy()
-                    timestamp = api_answer.get('current_date', 0)
+                    timestamp = api_answer.get('current_date', timestamp)
             else:
                 logger.debug('Нет новых статусов')
         except EmptyResponseFromApiError as error:
